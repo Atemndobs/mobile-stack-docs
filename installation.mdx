@@ -1,0 +1,221 @@
+---
+title: Installation
+description: 'Get Mobile Stack CLI installed and ready to use'
+---
+
+## Prerequisites
+
+Before installing Mobile Stack, ensure you have:
+
+<AccordionGroup>
+  <Accordion icon="node" title="Node.js 18 or higher">
+    Download from [nodejs.org](https://nodejs.org/)
+    
+    Check your version:
+    ```bash
+    node --version
+    # Should show v18.0.0 or higher
+    ```
+  </Accordion>
+
+  <Accordion icon="npm" title="npm or yarn">
+    Comes with Node.js installation
+    
+    ```bash
+    npm --version
+    # or
+    yarn --version
+    ```
+  </Accordion>
+
+  <Accordion icon="mobile" title="Expo CLI (Optional)">
+    For running on simulators/emulators
+    
+    ```bash
+    npm install -g expo-cli
+    ```
+  </Accordion>
+
+  <Accordion icon="database" title="Supabase Account">
+    Free tier available at [supabase.com](https://supabase.com)
+  </Accordion>
+</AccordionGroup>
+
+## Global Installation
+
+Install Mobile Stack CLI globally to use it from anywhere:
+
+```bash
+npm install -g @jnabusiness/mobile-stack
+```
+
+<Note>
+  The CLI will be available as both `mobile-stack` and `create-jnabs-app` commands.
+</Note>
+
+## Using npx (No Installation)
+
+You can also use npx to run  Mobile Stack without installing:
+
+```bash
+npx @jnabusiness/mobile-stack create my-app
+```
+
+<Tip>
+  Using npx always ensures you're using the latest version!
+</Tip>
+
+## Verify Installation
+
+Check that the CLI is installed correctly:
+
+```bash
+mobile-stack --version
+```
+
+You should see the current version number (e.g., `1.0.10`).
+
+Get help anytime:
+
+```bash
+mobile-stack --help
+```
+
+## Updating
+
+Keep your CLI up to date:
+
+```bash
+# If installed globally
+npm update -g @jnabusiness/mobile-stack
+
+# Or reinstall
+npm install -g @jnabusiness/mobile-stack@latest
+```
+
+## Platform-Specific Setup
+
+<Tabs>
+  <Tab title="macOS">
+    ### For iOS Development
+
+    Install Xcode from the App Store:
+    1. Open App Store
+    2. Search for "Xcode"
+    3. Install (requires ~15GB)
+
+    ### For Android Development
+
+    Install Android Studio:
+    1. Download from [developer.android.com](https://developer.android.com/studio)
+    2. Install Android SDK
+    3. Add to PATH:
+       ```bash
+       echo 'export ANDROID_HOME=$HOME/Library/Android/sdk' >> ~/.zshrc
+       echo 'export PATH=$PATH:$ANDROID_HOME/emulator' >> ~/.zshrc
+       echo 'export PATH=$PATH:$ANDROID_HOME/platform-tools' >> ~/.zshrc
+       source ~/.zshrc
+       ```
+  </Tab>
+
+  <Tab title="Windows">
+    ### For Android Development
+
+    1. Install Android Studio from [developer.android.com](https://developer.android.com/studio)
+    2. Install Android SDK
+    3. Add to System Environment Variables:
+       - `ANDROID_HOME = C:\Users\YourName\AppData\Local\Android\Sdk`
+       - Add to PATH: `%ANDROID_HOME%\platform-tools`
+
+    <Warning>
+      iOS development is not available on Windows. Use macOS or cloud services like Expo EAS.
+    </Warning>
+  </Tab>
+
+  <Tab title="Linux">
+    ### For Android Development
+
+    1. Install Android Studio
+    2. Setup SDK and environment:
+       ```bash
+       export ANDROID_HOME=$HOME/Android/Sdk
+       export PATH=$PATH:$ANDROID_HOME/emulator
+       export PATH=$PATH:$ANDROID_HOME/platform-tools
+       ```
+
+    Add to `~/.bashrc` or `~/.zshrc` to persist.
+  </Tab>
+</Tabs>
+
+## Quick Test
+
+After installation, test the CLI:
+
+```bash
+# Create a test app
+mobile-stack create test-app --yes
+
+# Navigate to it
+cd test-app
+
+# Check structure
+ls -la
+```
+
+You should see a fully generated React Native project!
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Command not found: mobile-stack">
+    **Solution**: Reinstall globally or check your PATH
+    
+    ```bash
+    npm install -g @jnabusiness/mobile-stack
+    # Restart your terminal
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied (EACCES)">
+    **Solution**: Fix npm permissions or use npx
+    
+    ```bash
+    # Option 1: Use npx
+    npx @jnabusiness/mobile-stack create my-app
+
+    # Option 2: Fix permissions (macOS/Linux)
+    sudo chown -R $(whoami) $(npm config get prefix)/{lib/node_modules,bin,share}
+    ```
+  </Accordion>
+
+  <Accordion title="Node version too old">
+    **Solution**: Update Node.js
+    
+    ```bash
+    # Using nvm (recommended)
+    nvm install 20
+    nvm use 20
+
+    # Or download from nodejs.org
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart Guide"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Create your first app in 5 minutes
+  </Card>
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/cli/create"
+  >
+    Learn all CLI commands and options
+  </Card>
+</CardGroup>

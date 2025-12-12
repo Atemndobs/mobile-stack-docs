@@ -1,0 +1,85 @@
+{
+    "$schema": "https://mintlify.com/schema.json",
+    "name": "Mobile Stack",
+    "logo": {
+        "dark": "/logo/dark.svg",
+        "light": "/logo/light.svg"
+    },
+    "favicon": "/favicon.svg",
+    "colors": {
+        "primary": "#000000",
+        "light": "#FFFFFF",
+        "dark": "#000000",
+        "anchors": {
+            "from": "#000000",
+            "to": "#333333"
+        }
+    },
+    "topbarLinks": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/Atemndobs/mobile-stack"
+        }
+    ],
+    "topbarCtaButton": {
+        "name": "Create App",
+        "url": "https://github.com/Atemndobs/mobile-stack#installation"
+    },
+    "navigation": [
+        {
+            "group": "Get Started",
+            "pages": [
+                "introduction",
+                "installation",
+                "quickstart"
+            ]
+        },
+        {
+            "group": "CLI Reference",
+            "pages": [
+                "cli/create",
+                "cli/options",
+                "cli/workflows"
+            ]
+        },
+        {
+            "group": "Architecture",
+            "pages": [
+                "architecture/overview",
+                "architecture/template-system",
+                "architecture/project-structure"
+            ]
+        },
+        {
+            "group": "Features",
+            "pages": [
+                "features/authentication",
+                "features/database",
+                "features/ai-integration",
+                "features/theming",
+                "features/tts",
+                "features/analytics"
+            ]
+        },
+        {
+            "group": "Components",
+            "pages": [
+                "components/theme-context",
+                "components/dropdowns",
+                "components/layouts"
+            ]
+        },
+        {
+            "group": "Guides",
+            "pages": [
+                "guides/customization",
+                "guides/deployment",
+                "guides/troubleshooting",
+                "guides/global-usage"
+            ]
+        }
+    ],
+    "footerSocials": {
+        "github": "https://github.com/Atemndobs/mobile-stack"
+    }
+}

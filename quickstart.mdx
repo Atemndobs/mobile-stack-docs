@@ -1,0 +1,300 @@
+---
+title: Quickstart
+description: 'Build your first mobile app in 5 minutes!'
+---
+
+## Get Up and Running
+
+Follow these simple steps to create and run your first Mobile Stack app.
+
+<Steps>
+  <Step title="Create Your App">
+    Use the CLI to generate a new app with all features:
+
+    ```bash
+    mobile-stack create my-app
+    ```
+
+    The interactive prompts will guide you through:
+    - App display name
+    - Bundle identifier  
+    - Feature selection (Auth, Database, AI, Analytics)
+    - Environment configuration
+
+    <Tip>
+      Use `--yes` flag to skip prompts and enable all features: `mobile-stack create my-app --yes`
+    </Tip>
+  </Step>
+
+  <Step title="Install Dependencies">
+    Navigate to your app and install packages:
+
+    ```bash
+    cd my-app
+   npm install
+    ```
+
+    This will install React Native, Expo, Supabase, and all necessary dependencies.
+  </Step>
+
+  <Step title="Set Up Supabase">
+    Configure your backend services:
+
+    1. **Create Supabase Project**
+       -Go to [supabase.com](https://supabase.com) and create a new project
+       - Wait for the project to finish setting up (~2 minutes)
+
+    2. **Get API Credentials**
+       - Go to **Settings → API**
+       - Copy your `Project URL` and `anon/public key`
+
+    3. **Configure Environment**
+       ```bash
+       cp .env.example .env.local
+       ```
+
+       Edit `.env.local`:
+       ```env
+       EXPO_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+       EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+       EXPO_PUBLIC_POSTHOG_API_KEY=  # Optional
+       EXPO_PUBLIC_POSTHOG_API_HOST=https://us.i.posthog.com
+       ```
+
+    4. **Run Database Migrations**
+       - Open Supabase SQL Editor
+       - Copy contents from `supabase/schema.sql`
+       - Paste and execute
+
+    5. **Enable Google OAuth**
+       - Go to **Authentication → Providers**
+       - Enable Google
+       - Add credentials (or use demo mode for testing)
+  </Step>
+
+  <Step title="Run Your App">
+    Start the development server:
+
+    ```bash
+    npm start
+    ```
+
+    Then choose how to view your app:
+
+    <Tabs>
+      <Tab title="iOS Simulator">
+        Press `i` in the terminal
+
+        <Note>
+          Requires Xcode installed (macOS only)
+        </Note>
+      </Tab>
+
+      <Tab title="Android Emulator">
+        Press `a` in the terminal
+
+        <Note>
+          Requires Android Studio and emulator configured
+        </Note>
+      </Tab>
+
+      <Tab title="Physical Device">
+        1. Install **Expo Go** app from App Store/Play Store
+        2. Scan the QR code shown in your terminal
+        3. App will load on your device!
+      </Tab>
+
+      <Tab title="Web Browser">
+        Press `w` in the terminal
+
+        <Warning>
+          Some native features won't work in web mode
+        </Warning>
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## What You Just Created
+
+Your new app includes:
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="shield-check">
+    Google OAuth login with protected routes
+  </Card>
+  <Card title="Database" icon="database">
+    Supabase PostgreSQL with prefixed tables
+  </Card>
+  <Card title="AI Models" icon="brain">
+    OpenAI, Gemini, Ollama integration ready
+  </Card>
+  <Card title="Analytics" icon="chart-line">
+    PostHog event tracking configured
+  </Card>
+  <Card title="Settings" icon="gear">
+    Pre-built LLM configuration UI
+  </Card>
+  <Card title="Theming" icon="palette">
+    Complete light/dark mode system
+  </Card>
+</CardGroup>
+
+## Quick Customizations
+
+###Add a New Screen
+
+Create a new file `app/(app)/my-screen.tsx`:
+
+```typescript
+import { Text, View, StyleSheet } from 'react-native';
+import { Stack, Link } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
+
+export default function MyScreen() {
+  const { colors } = useTheme();
+
+  return (
+    <>
+      <Stack.Screen options={{ title: 'My Screen' }} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.text, { color: colors.text }]}>
+          Hello from My Screen!
+        </Text>
+        <Link href="/" style={styles.link}>Go Home</Link>
+      </View>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 20,
+    marginBottom: 20,
+  },
+  link: {
+    color: '#007AFF',
+    fontSize: 16,
+  },
+});
+```
+
+Navigate to: `http://localhost:8081/my-screen`
+
+### Configure AI Models
+
+1. Open your app and go to **Settings**
+2. Tap on **AI Provider**
+3. Choose OpenAI, Gemini, or Ollama
+4. Enter your API key
+5. Select a model
+
+<Accordion title="Where to get API keys">
+  - **OpenAI**: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+  - **Gemini**: [makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
+  - **Ollama**: Run locally - no API key needed!
+</Accordion>
+
+### Add Database Tables
+
+Edit `supabase/schema.sql` and add your tables with the app prefix:
+
+```sql
+-- Example: Add a tasks table
+CREATE TABLE IF NOT EXISTS myapp_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  title TEXT NOT NULL,
+  completed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE myapp_tasks ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own tasks
+CREATE POLICY "Users can view own tasks"
+  ON myapp_tasks FOR SELECT
+  USING (auth.uid() = user_id);
+```
+
+Run this SQL in your Supabase SQL Editor.
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Cannot find module '@supabase/supabase-js'">
+    **Solution**: Install dependencies
+    
+    ```bash
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="No bundle URL present">
+    **Solution**: Clear cache and restart
+    
+    ```bash
+    npx expo start --clear
+    ```
+  </Accordion>
+
+  <Accordion title="Metro bundler error">
+    **Solution**: Clear Metro cache
+    
+    ```bash
+    rm -rf node_modules/.cache
+    npm start
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection failed">
+    **Solution**: Check your `.env.local` file
+    
+    - Verify Supabase URL is correct
+    - Verify anon key is correct
+    - Restart the development server
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Explore Features"
+    icon="sparkles"
+    href="/features/authentication"
+  >
+    Learn about all built-in features
+  </Card>
+  <Card
+    title="Customize Your App"
+    icon="paintbrush"
+    href="/guides/customization"
+  >
+    Make it your own
+  </Card>
+  <Card
+    title="Deploy to Production"
+    icon="rocket"
+    href="/guides/deployment"
+  >
+    Build and release your app
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/cli/create"
+  >
+    Complete CLI documentation
+  </Card>
+</CardGroup>
+
+<Check>
+  **You're all set!** 🎉 Your mobile app is up and running. Start building your features!
+</Check>

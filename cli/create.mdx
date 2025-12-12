@@ -1,0 +1,355 @@
+---
+title: mobile-stack create
+description: 'Generate a new mobile application with all features configured'
+---
+
+## Usage
+
+```bash
+mobile-stack create [app-name] [options]
+```
+
+## Description
+
+The `create` command generates a fully-configured React Native mobile application based on the Mobile Stack template. It handles all the setup including authentication, database, AI integration, and analytics.
+
+## Arguments
+
+<ParamField path="app-name" type="string" required>
+  Name of your application directory. Will be created in the current directory.
+  
+  **Example**: `mobile-stack create my-awesome-app`
+</ParamField>
+
+## Options
+
+<ParamField path="--yes" type="flag">
+  Skip all interactive prompts and use default values (all features enabled).
+  
+  ```bash
+  mobile-stack create my-app --yes
+  ```
+</ParamField>
+
+<ParamField path="--version" type="flag">
+  Display the CLI version number.
+  
+  ```bash  
+  mobile-stack --version
+  ```
+</ParamField>
+
+<ParamField path="--help" type="flag">
+  Show help information and all available commands.
+  
+  ```bash
+  mobile-stack --help
+  ```
+</ParamField>
+
+## Interactive Prompts
+
+When you run `create` without `--yes`, you'll be asked:
+
+<Steps>
+  <Step title="App Display Name">
+    The human-readable name shown in the app.
+    
+    **Example**: `My Awesome App`
+  </Step>
+
+  <Step title="Bundle Identifier">
+    Reverse domain notation for your app (iOS/Android).
+    
+    **Format**: `com.company.appname`
+    
+    **Example**: `com.jnabusiness.myapp`
+  </Step>
+
+  <Step title="Include Authentication">
+    Add Google OAuth + Supabase authentication system.
+    
+    **Includes**:
+    - Login/logout flows
+    - Protected routes
+    - Auth context provider
+    - User profile management
+  </Step>
+
+  <Step title="Include Database">
+    Add Supabase PostgreSQL database configuration.
+    
+    **Includes**:
+    - Supabase client setup
+    - App-prefixed tables
+    - Row-level security policies
+    - Migration templates
+  </Step>
+
+  <Step title="Include AI Integration">
+    Add AI model integration support.
+    
+    **Includes**:
+    - OpenAI (GPT-4o, GPT-4o-mini)
+    - Google Gemini (Flash, Pro, Flash 2.0)
+    - Ollama (local models)
+    - Model selection UI
+    - Unified LLM service
+  </Step>
+
+  <Step title="Include Text-to-Speech">
+    Add TTS capabilities with voice selection.
+    
+    **Includes**:
+    - Multiple voice options
+    - Voice dropdown component
+    - TTS service integration
+  </Step>
+
+  <Step title="Include Analytics">
+    Add PostHog analytics tracking.
+    
+    **Includes**:
+    - Event tracking utilities
+    - Pre-defined events
+    - Privacy controls
+  </Step>
+
+  <Step title="Include Error Tracking">
+    Add Sentry error tracking and monitoring.
+    
+    **Includes**:
+    - Crash reporting
+    - Error boundaries
+    - Performance monitoring
+  </Step>
+
+  <Step title="Copy Existing .env">
+    Optionally copy environment variables from another project.
+    
+    Useful when creating similar apps.
+  </Step>
+
+  <Step title="Test User Setup">
+    Configure test user credentials for development.
+    
+    **Options**:
+    - Use existing Supabase user
+    - Create new test user
+    - Skip (configure manually later)
+  </Step>
+</Steps>
+
+## Examples
+
+<CodeGroup>
+```bash Quick Start (All Features)
+mobile-stack create my-app --yes
+```
+
+```bash Custom Configuration
+mobile-stack create my-app
+# Answer prompts interactively
+```
+
+```bash Different Directory
+cd ~/projects
+mobile-stack create new-mobile-app
+```
+
+```bash With Specific Features
+# During interactive prompts:
+# - Yes to Auth
+# - Yes to Database  
+# - Yes to AI
+# - No to TTS
+# - Yes to Analytics
+# - No to Sentry
+```
+</CodeGroup>
+
+## Generated Project Structure
+
+```
+my-app/
+├── app/                    # Expo Router pages
+│   ├── (auth)/            # Auth screens (login, signup)
+│   │   ├── _layout.tsx
+│   │   └── login.tsx
+│   ├── (app)/             # Protected app screens
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx      # Home screen
+│   │   └── settings.tsx   # Settings screen
+│   └── _layout.tsx        # Root layout with auth
+├── components/            # Reusable components
+│   ├── ErrorBoundary.tsx
+│   ├── ModelDropdown.tsx   # AI model selector
+│   └── VoiceDropdown.tsx   # Voice selector (if TTS enabled)
+├── context/              # React Context providers
+│   ├── AuthContext.tsx   # Authentication state
+│   └── ThemeContext.tsx  # Light/dark mode
+├── lib/                  # Core libraries
+│   ├── supabase.ts      # Database client
+│   └── analytics.ts     # Analytics setup
+├── services/            # Business logic
+│   ├── llm.ts          # LLM service (if AI enabled)
+│   └── tts.ts          # TTS service (if TTS enabled)
+├── types/              # TypeScript types
+│   └── database.types.ts
+├── supabase/          # Database migrations
+│   └── schema.sql     # Initial schema
+├── .env.example       # Environment template
+└── package.json       # Dependencies
+```
+
+## What Happens During Generation
+
+<Steps>
+  <Step title="Template Processing">
+    EJS templates are processed with your configuration to generate custom files.
+  </Step>
+
+  <Step title="Dependency Management">
+    `package.json` is created with only the dependencies you need based on selected features.
+  </Step>
+
+  <Step title="Environment Setup">
+    `.env.example` is created with placeholders for your API keys and credentials.
+  </Step>
+
+  <Step title="Database Schema">
+    SQL migrations are generated with your app prefix for table names.
+  </Step>
+
+  <Step title="Git Initialization">
+    A `.gitignore` is created (repository not initialized by default).
+  </Step>
+</Steps>
+
+## After Generation
+
+Once your app is created:
+
+<CodeGroup>
+```bash Navigate & Install
+cd my-app
+npm install
+```
+
+```bash Configure Environment
+cp .env.example .env.local
+# Edit .env.local with your credentials
+```
+
+```bash Run Development Server
+npm start
+```
+</CodeGroup>
+
+## Feature Combinations
+
+<AccordionGroup>
+  <Accordion title="Full Stack App (Recommended)">
+    ```bash
+    --yes
+    ```
+    Enables: Auth + Database + AI + Analytics
+    
+    Perfect for complete applications.
+  </Accordion>
+
+  <Accordion title="Simple App (No Backend)">
+    All prompts: No
+    
+    Generates basic React Native app with theming.
+  </Accordion>
+
+  <Accordion title="AI-Focused App">
+    Yes to: AI Integration, Analytics
+    No to: Auth, Database
+    
+    Standalone AI interaction app.
+  </Accordion>
+
+  <Accordion title="Database App Only">
+    Yes to: Auth, Database
+    No to: AI, TTS, Analytics
+    
+    CRUD application foundation.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Generation failed with template error">
+    **Cause**: Corrupted template or missing dependencies
+    
+    **Solution**:
+    ```bash
+    # Reinstall CLI
+    npm install -g @jnabusiness/mobile-stack@latest
+    
+    # Try again
+    mobile-stack create my-app --yes
+    ```
+  </Accordion>
+
+  <Accordion title="App name already exists">
+    **Cause**: Directory with that name already exists
+    
+    **Solution**:
+    ```bash
+    # Choose a different name
+    mobile-stack create my-app-v2
+    
+    # Or remove existing directory
+    rm -rf my-app
+    mobile-stack create my-app
+    ```
+  </Accordion>
+
+  <Accordion title="Cannot write files (permission denied)">
+    **Cause**: No write permission in current directory
+    
+    **Solution**:
+    ```bash
+    # Move to a directory you own
+    cd ~/projects
+    mobile-stack create my-app
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Configure Supabase"
+    icon="database"
+    href="/features/database"
+  >
+    Set up your database and auth
+  </Card>
+  <Card
+    title="Add AI Models"
+    icon="robot"
+    href="/features/ai-integration"
+  >
+    Configure OpenAI, Gemini, or Ollama
+  </Card>
+  <Card
+    title="Customize Theme"
+    icon="paintbrush"
+    href="/features/theming"
+  >
+    Adjust colors and styles
+  </Card>
+  <Card
+    title="Deploy Your App"
+    icon="rocket"
+    href="/guides/deployment"
+  >
+    Build for production
+  </Card>
+</CardGroup>
