@@ -1,0 +1,365 @@
+---
+title: Architecture Overview
+description: 'Understanding the Mobile Stack system design and structure'
+---
+
+## System Architecture
+
+Mobile Stack uses a modular architecture that allows features to be enabled or disabled while maintaining a consistent structure.
+
+```
+┌─────────────────────────────────────────────────────┐
+│                 Mobile Stack CLI                     │
+│  ┌──────────┐  ┌────────────┐  ┌────────────────┐ │
+│  │  cli.ts  │→ │ create-app │→ │ EJS Templates  │ │
+│  │(Commander)│  │   (Logic)  │  │   (Processor)  │ │
+│  └──────────┘  └────────────┘  └────────────────┘ │
+└─────────────────────────────────────────────────────┘
+                      ↓
+              Generates App
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│              Generated Mobile App                    │
+│                                                       │
+│  App Screens (Expo Router)                          │
+│  ├── (auth)/login.tsx - Google OAuth                │
+│  ├── (app)/index.tsx - Home/Dashboard               │
+│  └── (app)/settings.tsx - AI Config, Profile        │
+│                                                       │
+│  Core Services                                       │
+│  ├── AuthContext - Session management               │
+│  ├── ThemeContext - Light/Dark mode                 │
+│  ├── llmService - AI model integration              │
+│  └── supabase - Database client                     │
+│                                                       │
+└─────────────────────────────────────────────────────┘
+                      ↓
+            External Services
+                      ↓
+┌─────────────────────────────────────────────────────┐
+│  ┌──────────┐  ┌─────────┐  ┌──────────┐          │
+│  │ Supabase │  │  OpenAI │  │ PostHog  │          │
+│  │(DB+Auth) │  │ Gemini  │  │(Analytics)│          │
+│  │          │  │ Ollama  │  │          │          │
+│  └──────────┘  └─────────┘  └──────────┘          │
+└─────────────────────────────────────────────────────┘
+```
+
+## File Structure
+
+```
+my-app/
+├── app/                    # Expo Router (file-based)
+│   ├── _layout.tsx        # Root: Auth wrapper
+│   ├── (auth)/            # Public routes
+│   │   └── login.tsx
+│   └── (app)/             # Protected routes
+│       ├── index.tsx
+│       └── settings.tsx
+│
+├── components/            # Reusable UI
+│   ├── ErrorBoundary.tsx
+│   ├── ModelDropdown.tsx
+│   └── VoiceDropdown.tsx
+│
+├── context/              # React Context
+│   ├── AuthContext.tsx
+│   └── ThemeContext.tsx
+│
+├── lib/                  # Core libraries
+│   ├── supabase.ts
+│   └── analytics.ts
+│
+├── services/            # Business logic
+│   ├── llm.ts          # AI integration
+│   └── tts.ts          # Text-to-Speech
+│
+├── types/              # TypeScript types
+│   └── database.types.ts
+│
+└── supabase/          # Migrations
+    └── schema.sql
+```
+
+## Component Hierarchy
+
+```
+RootLayout
+└── AuthProvider
+    └── ThemeProvider
+        ├── If loading: ActivityIndicator
+        ├── If !authenticated: (auth) group
+        │   └── LoginScreen
+        │       └── Google OAuth
+        └── If authenticated: (app) group
+            ├── HomeScreen
+            │   ├── Header (Settings button)
+            │   ├── Feature cards
+            │   └── Getting Started modal
+            └── SettingsScreen
+                ├── Profile section
+                ├── AI Provider selector
+                │   ├── ModelDropdown
+                │   └── API key inputs
+                ├── Theme toggle
+                └── Sign Out button
+```
+
+## Data Flow
+
+### Authentication Flow
+
+<Steps>
+  <Step title="App Opens">
+    Check for existing session in AsyncStorage
+  </Step>
+  
+  <Step title="No Session">
+    Redirect to Login screen
+  </Step>
+  
+  <Step title="User Taps Google">
+    Open OAuth browser with Supabase URL
+  </Step>
+  
+  <Step title="Google Authenticates">
+    Callback returns with session token
+  </Step>
+  
+  <Step title="Save Session">
+    Store in AsyncStorage for persistence
+  </Step>
+  
+  <Step title="Create Profile">
+    Insert/update user profile in database
+  </Step>
+  
+  <Step title="Redirect to Home">
+    Show protected app screens
+  </Step>
+</Steps>
+
+### AI Configuration Flow
+
+```
+Settings Screen
+      ↓
+Load saved config (SecureStore)
+      ↓
+Display current:
+  - Provider (OpenAI/Gemini/Ollama)
+  - Model
+  - API key (masked)
+      ↓
+User changes provider
+      ↓
+Update UI with provider's models
+      ↓
+User enters API key
+      ↓
+User selects model
+      ↓
+Save to SecureStore
+      ↓
+Success message
+```
+
+## State Management
+
+### Global State
+
+<Tabs>
+  <Tab title="AuthContext">
+    ```typescript
+    {
+      session: Session | null
+      user: User | null
+      profile: AppUser | null
+      isLoading: boolean
+      signOut: () => Promise<void>
+    }
+    ```
+    
+    Provides auth state to all components
+  </Tab>
+
+  <Tab title="ThemeContext">
+    ```typescript
+    {
+      theme: 'light' | 'dark'
+      colors: ThemeColors
+      toggleTheme: () => void
+    }
+    ```
+    
+    Manages light/dark mode
+  </Tab>
+</Tabs>
+
+### Persistent State
+
+Data stored across app restarts:
+
+<CodeGroup>
+```typescript AsyncStorage (not encrypted)
+- User session
+- Theme preference
+- Cache data
+```
+
+```typescript SecureStore (encrypted)
+- OpenAI API key
+- Gemini API key
+- Ollama base URL
+- Selected models
+```
+</CodeGroup>
+
+## Database Architecture
+
+### Table Prefixing
+
+Each app gets its own prefix:
+
+```
+my_app_user_profiles
+my_app_posts
+my_app_comments
+
+photo_menu_restaurants
+photo_menu_items
+
+Shared: auth.users, auth.sessions
+```
+
+<Note>
+  **Benefits**: One Supabase project, lower costs, shared auth users
+</Note>
+
+### Row-Level Security
+
+Security enforced at database level:
+
+```sql
+CREATE POLICY "Users view own data"
+  ON my_app_posts
+  FOR SELECT
+  USING (auth.uid() = user_id);
+```
+
+Users can only access their own data automatically.
+
+## Security Architecture
+
+```
+Client (Mobile App)
+├── SecureStore (encrypted)
+│   ├── API keys
+│   └── Tokens
+├── AsyncStorage (not encrypted)
+│   └── Session data
+└── HTTPS → Supabase
+    ├── Row-Level Security
+    ├── JWT validation
+    └── Rate limiting
+```
+
+## Routing (Expo Router)
+
+File-based routing with automatic navigation:
+
+```
+app/
+├── _layout.tsx       → / (root with auth wrapper)
+├── (auth)/
+│   └── login.tsx     → /(auth)/login
+└── (app)/
+    ├── index.tsx     → / (after auth)
+    └── settings.tsx  → /settings
+```
+
+<Tip>
+  Groups with `()` organize routes without affecting URLs
+</Tip>
+
+## Key Technologies
+
+<CardGroup cols={2}>
+  <Card title="React Native" icon="react">
+    Cross-platform mobile development
+  </Card>
+  <Card title="Expo" icon="mobile">
+    Development framework and tools
+  </Card>
+  <Card title="Expo Router" icon="route">
+    File-based navigation
+  </Card>
+  <Card title="TypeScript" icon="code">
+    Type safety and IntelliSense
+  </Card>
+  <Card title="Supabase" icon="database">
+    Auth and PostgreSQL database
+  </Card>
+  <Card title="PostHog" icon="chart-line">
+    Analytics and tracking
+  </Card>
+</CardGroup>
+
+## Design Principles
+
+<AccordionGroup>
+  <Accordion title="Modularity" icon="cubes">
+    Features can be enabled/disabled during generation without breaking the app
+  </Accordion>
+
+  <Accordion title="Type Safety" icon="shield">
+    Full TypeScript support prevents runtime errors
+  </Accordion>
+
+  <Accordion title="Security First" icon="lock">
+    RLS, encrypted storage, secure defaults
+  </Accordion>
+
+  <Accordion title="Developer Experience" icon="code">
+    Hot reload, type checking, file-based routing
+  </Accordion>
+
+  <Accordion title="Production Ready" icon="rocket">
+    Error handling, loading states, edge cases covered
+  </Accordion>
+</AccordionGroup>
+
+## Deployment Architecture
+
+<Steps>
+  <Step title="Development">
+    `npm start` → Expo Go app or simulator
+  </Step>
+
+  <Step title="Build">
+    `eas build` → iOS .ipa / Android .apk
+  </Step>
+
+  <Step title="Deploy">
+    Submit to App Store / Play Store
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Explore Features"
+    icon="sparkles"
+    href="/features/authentication"
+  >
+    Learn about built-in features
+  </Card>
+  <Card
+    title="Customize Your App"
+    icon="paintbrush"
+    href="/guides/customization"
+  >
+    Make it your own
+  </Card>
+</CardGroup>
