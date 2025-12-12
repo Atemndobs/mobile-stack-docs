@@ -1,0 +1,254 @@
+---
+title: Troubleshooting
+description: 'Common issues and solutions'
+---
+
+## Common Issues
+
+### Installation & Setup
+
+<AccordionGroup>
+  <Accordion title="Cannot find module '@supabase/supabase-js'" icon="box">
+    **Cause**: Dependencies not installed
+    
+    **Solution**:
+    ```bash
+    cd your-app
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="CLI command not found" icon="terminal">
+    **Cause**: Not installed globally or PATH issue
+    
+    **Solution**:
+    ```bash
+    # Reinstall
+    npm install -g @jnabusiness/mobile-stack
+
+    # Or use npx
+    npx @jnabusiness/mobile-stack create my-app
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied (EACCES)" icon="lock">
+    **Cause**: No write permissions
+    
+    **Solution**:
+    ```bash
+    # Use npx (no install)
+    npx @jnabusiness/mobile-stack create my-app
+
+    # Or fix permissions (macOS/Linux)
+    sudo chown -R $(whoami) $(npm config get prefix)/{lib/node_modules,bin,share}
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Runtime Errors
+
+<AccordionGroup>
+  <Accordion title="No bundle URL present" icon="link-slash">
+    **Cause**: Metro bundler cache issue
+    
+    **Solution**:
+    ```bash
+    npx expo start --clear
+    ```
+  </Accordion>
+
+  <Accordion title="Metro bundler error" icon="server">
+    **Cause**: Corrupted cache
+    
+    **Solution**:
+    ```bash
+    rm -rf node_modules/.cache
+    npx expo start --clear
+    ```
+  </Accordion>
+
+  <Accordion title="White screen on app open" icon="mobile-screen">
+    **Possible causes**:
+    - JavaScript error (check logs)
+    - Missing dependencies
+    - Invalid route
+    
+    **Solution**:
+    ```bash
+    # Check console for errors
+    npx expo start
+    
+    # Clear cache and reinstall
+    rm -rf node_modules
+    npm install
+    npx expo start --clear
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Authentication Issues
+
+<AccordionGroup>
+  <Accordion title="Google OAuth not working" icon="google">
+    **Possible causes**:
+    - Incorrect redirect URI
+    - Provider not enabled in Supabase
+    - Invalid credentials
+    
+    **Solution**:
+    1. Verify redirect URI: `https://xxxxx.supabase.co/auth/v1/callback`
+    2. Check Supabase **Authentication → Providers → Google** is enabled
+    3. Verify Client ID and Secret are correct
+    4. Check Supabase logs for specific errors
+  </Accordion>
+
+  <Accordion title="Session not persisting" icon="clock-rotate-left">
+    **Cause**: AsyncStorage not configured
+    
+    **Solution**:
+    ```bash
+    npm install @react-native-async-storage/async-storage
+    npx expo prebuild --clean
+    ```
+  </Accordion>
+
+  <Accordion title="Profile not loading" icon="user">
+    **Cause**: Database table not created
+    
+    **Solution**:
+    1. Open Supabase SQL Editor
+    2. Run migration from `supabase/schema.sql`
+    3. Verify table exists in **Table Editor**
+  </Accordion>
+</AccordionGroup>
+
+### Database Issues
+
+<AccordionGroup>
+  <Accordion title="Database connection failed" icon="database">
+    **Cause**: Invalid credentials or URL
+    
+    **Solution**:
+    1. Check `.env.local` has correct Supabase URL and key
+    2. Verify URL format: `https://xxxxx.supabase.co`
+    3. Verify anon key is correct (starts with `eyJhbGc`)
+    4. Restart dev server after changing env vars
+  </Accordion>
+
+  <Accordion title="RLS policy blocking queries" icon="shield">
+    **Cause**: Missing or incorrect Row-Level Security policy
+    
+    **Solution**:
+    1. Go to Supabase **Authentication → Policies**
+    2. Verify policies exist for your table
+    3. Test policy in SQL Editor:
+       ```sql
+       SELECT * FROM your_table WHERE auth.uid() = user_id;
+       ```
+  </Accordion>
+
+  <Accordion title="'relation does not exist' error" icon="table">
+    **Cause**: Table not created or wrong name
+    
+    **Solution**:
+    1. Verify table name matches your app prefix
+    2. Run migration in SQL Editor
+    3. Check **Table Editor** to confirm table exists
+  </Accordion>
+</AccordionGroup>
+
+### AI Integration Issues
+
+<AccordionGroup>
+  <Accordion title="API key invalid" icon="key">
+    **Cause**: Wrong or expired API key
+    
+    **Solution**:
+    - OpenAI: Verify key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+    - Gemini: Verify key at [makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
+    - Ensure key is correctly saved in app settings
+  </Accordion>
+
+  <Accordion title="Rate limit exceeded" icon="gauge-max">
+    **Cause**: Too many API requests
+    
+    **Solution**:
+    - Wait before making more requests
+    - Implement request queuing
+    - Upgrade API plan if needed
+    - Use free tier models (Gemini Flash, Ollama)
+  </Accordion>
+
+  <Accordion title="Ollama connection failed" icon="server">
+    **Cause**: Ollama not running
+    
+    **Solution**:
+    ```bash
+    # Start Ollama
+    ollama serve
+
+    # Verify it's running
+    curl http://localhost:11434
+
+    # Pull a model
+    ollama pull llava
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Build & Deployment
+
+<AccordionGroup>
+  <Accordion title="EAS build failed" icon="hammer">
+    **Solution**:
+    1. Check build logs in EAS dashboard
+    2. Common issues:
+       - Invalid credentials
+       - Incompatible dependencies
+       - Missing environment variables
+    3. Try local build first:
+       ```bash
+       npx expo prebuild
+       npx expo run:ios
+       ```
+  </Accordion>
+
+  <Accordion title="App crashes on device" icon="mobile">
+    **Solution**:
+    1. Check device logs (Xcode Console or Android Logcat)
+    2. Verify all native dependencies are installed:
+       ```bash
+       npx expo prebuild --clean
+       ```
+    3. Test on simulator/emulator first
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="Expo Documentation" icon="book" href="https://docs.expo.dev">
+    Official Expo guides
+  </Card>
+  <Card title="Supabase Docs" icon="database" href="https://supabase.com/docs">
+    Supabase documentation
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/Atemndobs/mobile-stack/issues">
+    Report bugs and issues
+  </Card>
+  <Card title="Customization Guide" icon="wrench" href="/guides/customization">
+    Learn to customize your app
+  </Card>
+</CardGroup>
+
+## Still Stuck?
+
+If you're still having issues:
+
+1. **Check the logs** - Most errors show helpful messages
+2. **Clear everything** - Remove `node_modules`, reinstall, clear cache
+3. **Start fresh** - Generate a new test app to isolate the issue
+4. **Ask for help** - Create a GitHub issue with:
+   - Error message
+   - Steps to reproduce
+   - OS and versions (`expo doctor`)

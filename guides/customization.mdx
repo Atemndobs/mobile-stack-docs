@@ -1,0 +1,221 @@
+---
+title: Customization Guide
+description: 'Making the generated app your own'
+---
+
+## Overview
+
+Mobile Stack generates a fully functional app that you can customize to match your specific requirements. This guide shows you common customization patterns.
+
+## Changing App Name & Icon
+
+### App Name
+
+Edit `app.json`:
+
+```json
+{
+  "expo": {
+    "name": "My Custom Name",
+    "slug": "my-custom-slug"
+  }
+}
+```
+
+### App Icon
+
+1. Replace `assets/icon.png` with your 1024x1024 icon
+2. Replace `assets/adaptive-icon.png` for Android
+3. Run `npx expo prebuild --clean` to regenerate native projects
+
+## Custom Colors
+
+Edit `context/ThemeContext.tsx`:
+
+```typescript
+const darkTheme: ThemeColors = {
+  background: '#000000',
+  primary: '#3B82F6',  // Custom blue
+  // ... other colors
+};
+
+const lightTheme: ThemeColors = {
+  background: '#FFFFFF',
+  primary: '#3B82F6',  // Same blue for consistency
+  // ... other colors
+};
+```
+
+## Adding New Screens
+
+<Steps>
+  <Step title="Create screen file">
+    ```bash
+    touch app/(app)/profile.tsx
+    ```
+  </Step>
+
+  <Step title="Add screen code">
+    ```typescript
+    import { View, Text } from 'react-native';
+    import { Stack } from 'expo-router';
+    import { useTheme } from '@/context/ThemeContext';
+
+    export default function ProfileScreen() {
+      const { colors } = useTheme();
+      
+      return (
+        <>
+          <Stack.Screen options={{ title: 'Profile' }} />
+          <View style={{ flex: 1, backgroundColor: colors.background }}>
+            <Text style={{ color: colors.text }}>Profile</Text>
+          </View>
+        </>
+      );
+    }
+    ```
+  </Step>
+
+  <Step title="Navigate to it">
+    ```typescript
+    import { router } from 'expo-router';
+    router.push('/profile');
+    ```
+  </Step>
+</Steps>
+
+## Custom Database Tables
+
+Add tables to `supabase/schema.sql`:
+
+```sql
+-- Posts table
+CREATE TABLE IF NOT EXISTS myapp_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  title TEXT NOT NULL,
+  content TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE myapp_posts ENABLE ROW LEVEL SECURITY;
+
+-- Policy
+CREATE POLICY "Users can view all posts"
+  ON myapp_posts FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can create own posts"
+  ON myapp_posts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+```
+
+Run in Supabase SQL Editor.
+
+## Modifying Settings Screen
+
+Add custom settings to `app/(app)/settings.tsx`:
+
+```typescript
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>My Custom Settings</Text>
+  
+  <TouchableOpacity style={styles.settingItem}>
+    <Text style={styles.settingLabel}>Notifications</Text>
+    <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} />
+  </TouchableOpacity>
+</View>
+```
+
+## Adding Custom Services
+
+Create `services/myservice.ts`:
+
+```typescript
+export const myService = {
+  async fetchData() {
+    const response = await fetch('https://api.example.com/data');
+    return response.json();
+  },
+  
+  async saveData(data: any) {
+    await fetch('https://api.example.com/data', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+```
+
+## Environment Variables
+
+Add secrets to `.env.local`:
+
+```env
+# Existing
+EXPO_PUBLIC_SUPABASE_URL=...
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+
+# Your custom variables
+EXPO_PUBLIC_API_KEY=your_api_key
+EXPO_PUBLIC_API_URL=https://api.example.com
+```
+
+Use in code:
+
+```typescript
+const apiKey = process.env.EXPO_PUBLIC_API_KEY;
+```
+
+## Custom Components
+
+Create reusable components in `components/`:
+
+```typescript
+// components/Card.tsx
+import { View, StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
+
+export function Card({ children }: { children: React.ReactNode }) {
+  const { colors } = useTheme();
+  
+  return (
+    <View style={[styles.card, { 
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+    }]}>
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+});
+```
+
+## Best Practices
+
+<Check>
+✅ **Keep app prefix** - Don't change database table prefixes  
+✅ **Use theme colors** - Always use `useTheme()` for colors  
+✅ **Follow file structure** - Keep organization consistent  
+✅ **Update types** - Regenerate database types after schema changes  
+✅ **Test both themes** - Verify UI in light and dark mode
+</Check>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy Your App" icon="rocket" href="/guides/deployment">
+    Build for production
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/architecture/project-structure">
+    Understand the organization
+  </Card>
+</CardGroup>

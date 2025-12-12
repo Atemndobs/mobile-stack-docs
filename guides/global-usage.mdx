@@ -1,0 +1,177 @@
+---
+title: Global CLI Usage
+description: 'Using Mobile Stack CLI from anywhere on your system'
+---
+
+## Overview
+
+After installing Mobile Stack globally, you can use the CLI from any directory to create new mobile applications.
+
+## Installation
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install -g @jnabusiness/mobile-stack
+    ```
+  </Tab>
+
+  <Tab title="npx (no install)">
+    ```bash
+    npx @jnabusiness/mobile-stack create my-app
+    ```
+  </Tab>
+</Tabs>
+
+## Available Commands
+
+### Main Command
+
+```bash
+mobile-stack
+```
+
+This is the primary command. You can also use the alias:
+
+```bash
+create-jnabs-app
+```
+
+### Create a New App
+
+```bash
+mobile-stack create <app-name> [options]
+```
+
+**Examples:**
+```bash
+# Interactive mode (asks for each option)
+mobile-stack create my-awesome-app
+
+# Quick mode (all features enabled)
+mobile-stack create my-awesome-app --yes
+
+# From any directory
+cd ~/projects
+mobile-stack create new-mobile-app
+```
+
+### Check Version
+
+```bash
+mobile-stack --version
+# or
+mobile-stack -v
+```
+
+### Get Help
+
+```bash
+mobile-stack --help
+# or
+mobile-stack -h
+```
+
+## Working Directory
+
+The CLI creates apps in your **current working directory**:
+
+```bash
+# App created at: /Users/you/projects/my-app
+cd /Users/you/projects
+mobile-stack create my-app
+
+# App created at: /Users/you/Desktop/my-app
+cd ~/Desktop
+mobile-stack create my-app
+```
+
+<Tip>
+  Always `cd` to where you want the app before running `create`
+</Tip>
+
+## Global vs Local
+
+<Tabs>
+  <Tab title="Global Install (Recommended)">
+    **Pros:**
+    - Available from anywhere
+    - No need to remember npx
+    - Faster (already installed)
+
+    **Install:**
+    ```bash
+    npm install -g @jnabusiness/mobile-stack
+    ```
+
+    **Usage:**
+    ```bash
+    mobile-stack create my-app
+    ```
+  </Tab>
+
+  <Tab title="npx (No Install)">
+    **Pros:**
+    - No installation needed
+    - Always uses latest version
+    - Good for one-time use
+
+    **Usage:**
+    ```bash
+    npx @jnabusiness/mobile-stack create my-app
+    ```
+  </Tab>
+</Tabs>
+
+## Updating
+
+Keep your CLI up-to-date for the latest features:
+
+```bash
+# Reinstall to latest
+npm install -g @jnabusiness/mobile-stack@latest
+
+# Or use npm update
+npm update -g @jnabusiness/mobile-stack
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Command not found">
+    **Cause**: CLI not installed globally or PATH issue
+    
+    **Solution**:
+    ```bash
+    # Reinstall globally
+    npm install -g @jnabusiness/mobile-stack
+    
+    # Verify installation
+    which mobile-stack
+    ```
+  </Accordion>
+
+  <Accordion title="Permission denied (EACCES)">
+    **Cause**: No permission to install globally
+    
+    **Solution**:
+    ```bash
+    # Use npx instead (no install needed)
+    npx @jnabusiness/mobile-stack create my-app
+    
+    # Or fix npm permissions (macOS/Linux)
+    sudo chown -R $(whoami) $(npm config get prefix)/{lib/node_modules,bin,share}
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Reference" icon="terminal" href="/cli/create">
+    Complete command documentation
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first app
+  </Card>
+</CardGroup>

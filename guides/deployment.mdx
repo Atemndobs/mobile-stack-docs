@@ -1,0 +1,247 @@
+---
+title: Deployment Guide
+description: 'Building and deploying your app to production'
+---
+
+## Overview
+
+Deploy your Mobile Stack app to the App Store and Play Store using Expo Application Services (EAS).
+
+## Prerequisites
+
+<Steps>
+  <Step title="Install EAS CLI">
+    ```bash
+    npm install -g eas-cli
+    ```
+  </Step>
+
+  <Step title="Login to Expo">
+    ```bash
+    eas login
+    ```
+    
+    Create an account at [expo.dev](https://expo.dev) if needed
+  </Step>
+
+  <Step title="Configure EAS">
+    ```bash
+    cd your-app
+    eas build:configure
+    ```
+    
+    This creates `eas.json` configuration file
+  </Step>
+</Steps>
+
+## Building for iOS
+
+<Steps>
+  <Step title="Set up Apple Developer Account">
+    - Enroll at [developer.apple.com](https://developer.apple.com)
+    - Cost: $99/year
+  </Step>
+
+  <Step title="Create app in App Store Connect">
+    - Go to [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+    - Click **+ App**
+    - Fill in app details
+  </Step>
+
+  <Step title="Build for iOS">
+    ```bash
+    eas build --platform ios
+    ```
+    
+    EAS will:
+    - Create App Store credentials (or use existing)
+    - Build your app in the cloud
+    - Provide download link when complete
+  </Step>
+
+  <Step title="Submit to App Store">
+    ```bash
+    eas submit --platform ios
+    ```
+    
+    Or download and upload manually via Transporter app
+  </Step>
+</Steps>
+
+## Building for Android
+
+<Steps>
+  <Step title="Set up Google Play Developer Account">
+    - Sign up at [play.google.com/console](https://play.google.com/console)
+    - Cost: $25 one-time fee
+  </Step>
+
+  <Step title="Create app in Play Console">
+    - Click **Create app**
+    - Fill in app details
+  </Step>
+
+  <Step title="Build for Android">
+    ```bash
+    eas build --platform android
+    ```
+    
+    EAS handles keystore creation automatically
+  </Step>
+
+  <Step title="Submit to Play Store">
+    ```bash
+    eas submit --platform android
+    ```
+    
+    Or download AAB and upload manually
+  </Step>
+</Steps>
+
+## Build Profiles
+
+Edit `eas.json` for different build configurations:
+
+```json
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  }
+}
+```
+
+### Build Types
+
+<Tabs>
+  <Tab title="Development">
+    ```bash
+    eas build --profile development --platform ios
+    ```
+    
+    For testing with dev builds
+  </Tab>
+
+  <Tab title="Preview">
+    ```bash
+    eas build --profile preview --platform android
+    ```
+    
+    Internal testing APK (Android)
+  </Tab>
+
+  <Tab title="Production">
+    ```bash
+    eas build --profile production --platform all
+    ```
+    
+    App Store/Play Store builds
+  </Tab>
+</Tabs>
+
+## Environment Variables
+
+Set production environment variables:
+
+```bash
+# Set variables for EAS builds
+eas secret:create --name EXPO_PUBLIC_SUPABASE_URL --value https://...
+eas secret:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value eyJhbGc...
+eas secret:create --name EXPO_PUBLIC_POSTHOG_API_KEY --value phc_...
+```
+
+Or add to `eas.json`:
+
+```json
+{
+  "build": {
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.production.com"
+      }
+    }
+  }
+}
+```
+
+## Updates (OTA)
+
+Push JavaScript/asset updates without rebuilding:
+
+```bash
+# Install eas-update
+npm install --save expo-updates
+
+# Publish update
+eas update --branch production --message "Fix login bug"
+```
+
+Users get updates automatically on next app restart.
+
+## Best Practices
+
+<Check>
+✅ **Test thoroughly** - Test on real devices before submitting  
+✅ **Version bumping** - Increment version in `app.json`  
+✅ **Screenshots** - Prepare app store screenshots  
+✅ **Privacy policy** - Required by both stores  
+✅ **App description** - Write compelling store descriptions
+</Check>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build failed">
+    Check build logs in EAS dashboard for specific errors
+    
+    Common issues:
+    - Missing credentials
+    - Invalid bundle identifier
+    - Dependencies not compatible
+  </Accordion>
+
+  <Accordion title="App rejected from review">
+    Common rejection reasons:
+    - Missing privacy policy
+    - Guideline violations
+    - Incorrect metadata
+    
+    Review feedback and resubmit
+  </Accordion>
+
+  <Accordion title="Slow build times">
+    EAS builds can take 10-30 minutes
+    
+    Speed up:
+    - Use development builds locally
+    - Submit during off-peak hours
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="EAS Documentation" icon="book" href="https://docs.expo.dev/eas/">
+    Complete EAS guide
+  </Card>
+  <Card title="App Store Guidelines" icon="apple" href="https://developer.apple.com/app-store/review/guidelines/">
+    Apple review guidelines
+  </Card>
+  <Card title="Play Store Guidelines" icon="google-play" href="https://play.google.com/console/about/guides/">
+    Google Play policies
+  </Card>
+  <Card title="Customization" icon="palette" href="/guides/customization">
+    Polish your app
+  </Card>
+</CardGroup>
