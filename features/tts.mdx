@@ -1,0 +1,115 @@
+---
+title: Text-to-Speech (TTS)
+description: 'Add voice synthesis to your mobile app'
+---
+
+## Overview
+
+Mobile Stack includes optional Text-to-Speech (TTS) capabilities that allow your app to convert text into spoken audio with multiple voice options.
+
+<Note>
+  TTS is an **optional feature** - enable it during app generation when prompted.
+</Note>
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Multiple Voices" icon="user-voice">
+    Choose from various voice personas
+  </Card>
+  <Card title="Voice Dropdown" icon="list">
+    Pre-built UI component for selection
+  </Card>
+  <Card title="Secure Storage" icon="lock">
+    Voice preferences saved locally
+  </Card>
+  <Card title="Easy Integration" icon="plug">
+    Simple API for TTS conversion
+  </Card>
+</CardGroup>
+
+## Available Voices
+
+The TTS service includes multiple voice options:
+
+```typescript
+const VOICES = [
+  { id: 'alloy', name: 'Alloy' },
+  { id: 'echo', name: 'Echo' },
+  { id: 'fable', name: 'Fable' },
+  { id: 'onyx', name: 'Onyx' },
+  { id: 'nova', name: 'Nova' },
+  { id: 'shimmer', name: 'Shimmer' },
+];
+```
+
+## Using TTS Service
+
+```typescript
+import { ttsService } from '@/services/tts';
+
+// Save selected voice
+await ttsService.saveSelectedVoice('alloy');
+
+// Get selected voice
+const voice = await ttsService.getSelectedVoice();
+
+// Convert text to speech
+const audioUrl = await generateSpeech('Hello world!', voice);
+```
+
+## Voice Dropdown Component
+
+The generated app includes a `VoiceDropdown.tsx` component:
+
+```typescript
+import { VoiceDropdown } from '@/components/VoiceDropdown';
+
+<VoiceDropdown
+  selectedVoice={currentVoice}
+  onSelectVoice={(voice) => setCurrentVoice(voice)}
+/>
+```
+
+## Implementation Example
+
+```typescript
+import { useState } from 'react';
+import { ttsService } from '@/services/tts';
+
+export default function TTSScreen() {
+  const [text, setText] = useState('');
+  const [voice, setVoice] = useState('alloy');
+
+  const speak = async () => {
+    const audioUrl = await generateSpeech(text, voice);
+    // Play audio using expo-av or similar
+  };
+
+  return (
+    <View>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder="Enter text to speak"
+      />
+      <VoiceDropdown
+        selectedVoice={voice}
+        onSelectVoice={setVoice}
+      />
+      <Button title="Speak" onPress={speak} />
+    </View>
+  );
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Voice Components" icon="microphone" href="/components/dropdowns">
+    Learn about VoiceDropdown
+  </Card>
+  <Card title="AI Integration" icon="robot" href="/features/ai-integration">
+    Combine with AI models
+  </Card>
+</CardGroup>

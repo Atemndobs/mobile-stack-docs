@@ -1,0 +1,203 @@
+---
+title: Analytics with PostHog
+description: 'Track user behavior and app performance'
+---
+
+## Overview
+
+Mobile Stack includes PostHog analytics integration for tracking user events, behavior, and app performance.
+
+<Note>
+  Analytics is an **optional feature** - enable it during app generation.
+</Note>
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Event Tracking" icon="chart-line">
+    Track custom user events
+  </Card>
+  <Card title="User Properties" icon="user">
+    Identify users with metadata
+  </Card>
+  <Card title="Privacy First" icon="shield">
+    Opt-in analytics with controls
+  </Card>
+  <Card title="Free Tier" icon="gift">
+    Generous free tier from PostHog
+  </Card>
+</CardGroup>
+
+## Setup
+
+<Steps>
+  <Step title="Create PostHog Account">
+    Sign up at [posthog.com](https://posthog.com) - free tier available
+  </Step>
+
+  <Step title="Get API Key">
+    1. Go to Project Settings
+    2. Copy your **Project API Key**
+    3. Note the **API Host** (usually `https://us.i.posthog.com`)
+  </Step>
+
+  <Step title="Configure Environment">
+    Add to `.env.local`:
+    ```env
+    EXPO_PUBLIC_POSTHOG_API_KEY=phc_...
+    EXPO_PUBLIC_POSTHOG_API_HOST=https://us.i.posthog.com
+    ```
+  </Step>
+
+  <Step title="Restart App">
+    Restart your development server to load the new environment variables
+  </Step>
+</Steps>
+
+## Pre-defined Events
+
+The generated app includes common event constants:
+
+```typescript
+// lib/analytics.ts
+export const EVENTS = {
+  // Auth events
+  USER_SIGNED_IN: 'user_signed_in',
+  USER_SIGNED_OUT: 'user_signed_out',
+  
+  // Screen views
+  SCREEN_VIEWED: 'screen_viewed',
+  
+  // AI events
+  AI_PROVIDER_CHANGED: 'ai_provider_changed',
+  AI_MODEL_SELECTED: 'ai_model_selected',
+  
+  // App events
+  APP_OPENED: 'app_opened',
+  SETTINGS_UPDATED: 'settings_updated',
+};
+```
+
+## Tracking Events
+
+```typescript
+import { trackEvent, EVENTS } from '@/lib/analytics';
+
+// Simple event
+trackEvent(EVENTS.SCREEN_VIEWED, {
+  screen_name: 'Home',
+});
+
+// Event with properties
+trackEvent(EVENTS.AI_PROVIDER_CHANGED, {
+  old_provider: 'openai',
+  new_provider: 'gemini',
+  timestamp: new Date().toISOString(),
+});
+
+// Custom event
+trackEvent('custom_action', {
+  action_type: 'button_click',
+  button_id: 'submit',
+});
+```
+
+## Identifying Users
+
+```typescript
+import { posthog } from '@/lib/analytics';
+
+// Identify user after login
+posthog.identify(user.id, {
+  email: user.email,
+  name: user.name,
+  plan: 'free',
+});
+
+// Reset after logout
+posthog.reset();
+```
+
+## Screen Tracking
+
+Automatically track screen views:
+
+```typescript
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+import { trackEvent, EVENTS } from '@/lib/analytics';
+
+export default function MyScreen() {
+  useFocusEffect(
+    useCallback(() => {
+      trackEvent(EVENTS.SCREEN_VIEWED, {
+        screen_name: 'My Screen',
+      });
+    }, [])
+  );
+  
+  return <View>...</View>;
+}
+```
+
+## User Properties
+
+Set custom user properties:
+
+```typescript
+posthog.capture('$set', {
+  $set: {
+    subscription_tier: 'premium',
+    user_segment: 'power_user',
+    onboarding_completed: true,
+  },
+});
+```
+
+## Privacy Controls
+
+Respect user privacy:
+
+```typescript
+import { posthog } from '@/lib/analytics';
+
+// Opt out of analytics
+posthog.optOut();
+
+// Opt back in
+posthog.optIn();
+
+// Check opt-out status
+const hasOptedOut = await posthog.has_opted_out_capturing();
+```
+
+## Dashboard
+
+View your analytics at [app.posthog.com](https://app.posthog.com):
+
+- **Insights**: Custom charts and trends
+- **Events**: Real-time event stream
+- **Users**: User profiles and behavior
+- **Funnels**: Conversion tracking
+- **Retention**: User retention analysis
+
+## Best Practices
+
+<Check>
+✅ **Track meaningful events** - Focus on user actions that matter  
+✅ **Include context** - Add relevant properties to events  
+✅ **Respect privacy** - Provide opt-out options  
+✅ **Test locally** - Verify events in PostHog dashboard  
+✅ **Document events** - Keep EVENTS constants updated
+</Check>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Event Planning" icon="diagram-project" href="https://posthog.com/docs">
+    PostHog documentation
+  </Card>
+  <Card title="Customize Tracking" icon="code" href="/guides/customization">
+    Add custom events
+  </Card>
+</CardGroup>

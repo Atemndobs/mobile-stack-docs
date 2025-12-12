@@ -1,0 +1,110 @@
+---
+title: Theme Context & Colors
+description: 'Using the ThemeContext for dynamic light/dark mode'
+---
+
+## Overview
+
+The `ThemeContext` provides theme colors and controls throughout your entire app, enabling seamless light/dark mode switching.
+
+## Using ThemeContext
+
+```typescript
+import { useTheme } from '@/context/ThemeContext';
+
+export default function MyComponent() {
+  const { colors, theme, toggleTheme } = useTheme();
+  
+  return (
+    <View style={{ backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text }}>
+        Current theme: {theme}
+      </Text>
+      <Button title="Toggle Theme" onPress={toggleTheme} />
+    </View>
+  );
+}
+```
+
+## Available Properties
+
+<ParamField path="colors" type="ThemeColors">
+  Object containing all theme color tokens:
+  ```typescript
+  {
+    background: string
+    primary: string
+    surface: string
+    surfaceAlt: string
+    overlay: string
+    text: string
+    textSecondary: string
+    textTertiary: string
+    border: string
+    borderAlt: string
+  }
+  ```
+</ParamField>
+
+<ParamField path="theme" type="'light' | 'dark'">
+  Current active theme
+</ParamField>
+
+<ParamField path="toggleTheme" type="() => void">
+  Function to switch between light and dark mode
+</ParamField>
+
+## Color Tokens
+
+See the complete [Theming System](/features/theming) documentation for all color tokens and usage patterns.
+
+## Dynamic Styling
+
+Always use `useMemo` with theme colors:
+
+```typescript
+import { useMemo } from 'react';
+import { StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
+
+export default function MyScreen() {
+  const { colors } = useTheme();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    text: {
+      color: colors.text,
+      fontSize: 16,
+    },
+  }), [colors]);
+  
+  return <View style={styles.container}>...</View>;
+}
+```
+
+## Theme Persistence
+
+Theme preference is automatically saved to `AsyncStorage` and restored on app restart.
+
+```typescript
+// Saved automatically on toggle
+const { toggleTheme } = useTheme();
+toggleTheme(); // Persists to storage
+
+// Loaded automatically on app start
+// No manual loading needed!
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Complete Theming Guide" icon="palette" href="/features/theming">
+    Full theming documentation
+  </Card>
+  <Card title="Component Examples" icon="puzzle-piece" href="/components/dropdowns">
+    See themed components
+  </Card>
+</CardGroup>

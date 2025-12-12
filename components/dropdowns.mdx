@@ -1,0 +1,170 @@
+---
+title: Model & Voice Dropdowns
+description: 'Pre-built dropdown components for AI and TTS selection'
+---
+
+## Overview
+
+Mobile Stack includes pre-built dropdown components for selecting AI models and TTS voices with theme support and SecureStore integration.
+
+## ModelDropdown Component
+
+Select AI models from different providers:
+
+```typescript
+import { ModelDropdown } from '@/components/ModelDropdown';
+
+export default function SettingsScreen() {
+  const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  
+  return (
+    <ModelDropdown
+      provider="openai" // or 'gemini' or 'ollama'
+      selectedModel={selectedModel}
+      onSelectModel={(model) => {
+        setSelectedModel(model);
+        // Save to SecureStore
+      }}
+    />
+  );
+}
+```
+
+### Props
+
+<ParamField path="provider" type="'openai' | 'gemini' | 'ollama'" required>
+  AI provider to show models for
+</ParamField>
+
+<ParamField path="selectedModel" type="string" required>
+  Currently selected model ID
+</ParamField>
+
+<ParamField path="onSelectModel" type="(modelId: string) => void" required>
+  Callback when model is selected
+</ParamField>
+
+### Features
+
+- ✅ Theme-aware styling
+- ✅ Modal interface with smooth animations
+- ✅ Radio button selection
+- ✅ Model names and IDs displayed
+- ✅ "Free" badges for free tier models
+
+## VoiceDropdown Component
+
+Select TTS voices:
+
+```typescript
+import { VoiceDropdown } from '@/components/VoiceDropdown';
+
+export default function TTSSettings() {
+  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  
+  return (
+    <VoiceDropdown
+      selectedVoice={selectedVoice}
+      onSelectVoice={(voice) => {
+        setSelectedVoice(voice);
+        // Save preference
+      }}
+    />
+  );
+}
+```
+
+### Props
+
+<ParamField path="selectedVoice" type="string" required>
+  Currently selected voice ID
+</ParamField>
+
+<ParamField path="onSelectVoice" type="(voiceId: string) => void" required>
+  Callback when voice is selected
+</ParamField>
+
+### Available Voices
+
+- Alloy
+- Echo
+- Fable
+- Onyx
+- Nova
+- Shimmer
+
+## Customization
+
+Both components use `useTheme()` internally, so they automatically adapt to your theme:
+
+```typescript
+// Already themed - just use them!
+<ModelDropdown ... />
+<VoiceDropdown ... />
+```
+
+To customize styling, you can create your own version:
+
+```typescript
+// Copy components/ModelDropdown.tsx
+// Modify styles as needed
+// Import your custom version
+```
+
+## Implementation Details
+
+Both components follow the same pattern:
+
+1. **Modal Interface**: Full-screen modal with overlay
+2. **Radio Selection**: Clear visual selection state
+3. **Theme Integration**: Uses `colors` from `useTheme()`
+4. **Animation**: Smooth modal transitions
+5. **Accessibility**: Proper touch targets and labels
+
+## Example: Combined Usage
+
+```typescript
+export default function AISettings() {
+  const { colors } = useTheme();
+  const [provider, setProvider] = useState('openai');
+  const [model, setModel] = useState('gpt-4o');
+  const [voice, setVoice] = useState('alloy');
+
+  return (
+    <View style={{ backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text }}>AI Provider</Text>
+      <Picker
+        selectedValue={provider}
+        onValueChange={setProvider}
+      >
+        <Picker.Item label="OpenAI" value="openai" />
+        <Picker.Item label="Gemini" value="gemini" />
+      </Picker>
+
+      <Text style={{ color: colors.text }}>Model</Text>
+      <ModelDropdown
+        provider={provider}
+        selectedModel={model}
+        onSelectModel={setModel}
+      />
+
+      <Text style={{ color: colors.text }}>Voice</Text>
+      <VoiceDropdown
+        selectedVoice={voice}
+        onSelectVoice={setVoice}
+      />
+    </View>
+  );
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AI Integration" icon="robot" href="/features/ai-integration">
+    Learn about AI models
+  </Card>
+  <Card title="TTS Feature" icon="microphone" href="/features/tts">
+    Text-to-Speech setup
+  </Card>
+</CardGroup>
