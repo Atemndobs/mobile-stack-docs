@@ -1,0 +1,326 @@
+---
+title: AI Model Integration
+description: 'OpenAI, Google Gemini, and Ollama support with unified API'
+---
+
+## Overview
+
+Mobile Stack includes built-in support for multiple AI providers with a unified service layer that makes it easy to switch between providers or let users choose their preferred AI model.
+
+## Supported Providers
+
+<CardGroup cols={3}>
+  <Card title="OpenAI" icon="openai">
+    GPT-4o, GPT-4o Mini
+  </Card>
+  <Card title="Google Gemini" icon="google">
+    Gemini 2.0 Flash, 1.5 Pro, 1.5 Flash
+  </Card>
+  <Card title="Ollama" icon="server">
+    LLaVA, Llama 3.2 Vision (local)
+  </Card>
+</CardGroup>
+
+## Available Models
+
+### OpenAI Models
+
+```typescript
+const OPENAI_MODELS = [
+  { id: 'gpt-4o', name: 'GPT-4o', isFree: false },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', isFree: false },
+];
+```
+
+### Gemini Models
+
+```typescript
+const GEMINI_MODELS = [
+  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', isFree: true },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', isFree: false },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', isFree: true },
+];
+```
+
+### Ollama Models
+
+```typescript
+const OLLAMA_MODELS = [
+  { id: 'llava', name: 'LLaVA', isFree: true },
+  { id: 'llama3.2-vision', name: 'Llama 3.2 Vision', isFree: true },
+];
+```
+
+## Configuration UI
+
+The generated Settings screen includes a complete AI configuration interface:
+
+- **Provider Selection**: Choose OpenAI, Gemini, or Ollama
+- **API Key Management**: Securely store API keys
+- **Model Selection**: Pick from available models
+- **Base URL Configuration**: Set custom endpoints (for Ollama)
+
+## Using the LLM Service
+
+The `llmService` provides a unified interface for all AI providers:
+
+```typescript
+import { llmService } from '@/services/llm';
+
+// Save API key
+await llmService.saveOpenAIKey('sk-...');
+await llmService.saveGeminiKey('AI...');
+
+// Get active provider
+const provider = await llmService.getActiveProvider();
+// Returns: 'openai' | 'gemini' | 'ollama' | null
+
+// Save selected model
+await llmService.saveOpenAIModel('gpt-4o');
+await llmService.saveGeminiModel('gemini-2.0-flash-exp');
+
+// Get selected model
+const model = await llmService.getOpenAIModel();
+```
+
+## API Key Setup
+
+<Tabs>
+  <Tab title="OpenAI">
+    1. Go to [platform.openai.com](https://platform.openai.com/api-keys)
+    2. Click **Create new secret key**
+    3. Copy the key (starts with `sk-`)
+    4. Open your app → Settings → AI Provider → OpenAI
+    5. Paste the key and save
+  </Tab>
+
+  <Tab title="Gemini">
+    1. Go to [makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
+    2. Click **Create API Key**
+    3. Copy the key (starts with `AI`)
+    4. Open your app → Settings → AI Provider → Gemini
+    5. Paste the key and save
+  </Tab>
+
+  <Tab title="Ollama">
+    1. Install Ollama from [ollama.com](https://ollama.com)
+    2. Run a model: `ollama run llava`
+    3. Ollama runs on `http://localhost:11434`
+    4. Open your app → Settings → AI Provider → Ollama
+    5. Set base URL (or use default) and select model
+    
+    <Note>
+      Ollama runs locally - no API key needed!
+    </Note>
+  </Tab>
+</Tabs>
+
+## Making AI Requests
+
+### OpenAI Example
+
+```typescript
+import { llmService } from '@/services/llm';
+
+const generateText = async (prompt: string) => {
+  // Get API key and model
+  const apiKey = await llmService.getOpenAIKey();
+  const model = await llmService.getOpenAIModel();
+
+  if (!apiKey || !model) {
+    throw new Error('OpenAI not configured');
+  }
+
+  // Make request
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+    }),
+  });
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+};
+```
+
+### Gemini Example
+
+```typescript
+const generateWithGemini = async (prompt: string) => {
+  const apiKey = await llmService.getGeminiKey();
+  const model = await llmService.getGeminiModel();
+
+  if (!apiKey || !model) {
+    throw new Error('Gemini not configured');
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    }
+  );
+
+  const data = await response.json();
+  return data.candidates[0].content.parts[0].text;
+};
+```
+
+### Unified Helper
+
+Create a helper that works with any provider:
+
+```typescript
+const generateAIResponse = async (prompt: string) => {
+  const provider = await llmService.getActiveProvider();
+
+  switch (provider) {
+    case 'openai':
+      return generateWithOpenAI(prompt);
+    case 'gemini':
+      return generateWithGemini(prompt);
+    case 'ollama':
+      return generateWithOllama(prompt);
+    default:
+      throw new Error('No AI provider configured');
+  }
+};
+```
+
+## Security Best Practices
+
+<Check>
+✅ **Use SecureStore** - API keys stored securely  
+✅ **Never hardcode keys** - Always use environment variables or SecureStore  
+✅ **Validate on client** - Check for API key before making requests  
+✅ **Handle errors** - Show user-friendly messages for API failures  
+✅ **Rate limiting** - Respect provider rate limits
+</Check>
+
+## Provider Comparison
+
+| Feature | OpenAI | Gemini | Ollama |
+|---------|--------|---------|--------|
+| **Cost** | Paid (usage-based) | Free tier + paid | Free (local) |
+| **Speed** | Fast | Very fast | Depends on hardware |
+| **Quality** | Excellent | Excellent | Good |
+| **Privacy** | Cloud service | Cloud service | Fully local |
+| **Setup** | API key only | API key only | Install software |
+| **Internet** | Required | Required | Not required |
+
+## Example Use Cases
+
+<AccordionGroup>
+  <Accordion title="Chat Assistant" icon="message">
+    ```typescript
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+
+    const sendMessage = async () => {
+      const userMessage = { role: 'user', content: input };
+      setMessages([...messages, userMessage]);
+
+      const response = await generateAIResponse(input);
+      const aiMessage = { role: 'assistant', content: response };
+      setMessages([...messages, userMessage, aiMessage]);
+      
+      setInput('');
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="Text Summarization" icon="compress">
+    ```typescript
+    const summarizeText = async (text: string) => {
+      const prompt = `Summarize this text in 2-3 sentences:\n\n${text}`;
+      return await generateAIResponse(prompt);
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="Code Generation" icon="code">
+    ```typescript
+    const generateCode = async (description: string) => {
+      const prompt = `Generate TypeScript code for: ${description}`;
+      return await generateAIResponse(prompt);
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="Image Analysis (Vision)" icon="image">
+    ```typescript
+    const analyzeImage = async (imageBase64: string) => {
+      // Works with GPT-4o, Gemini vision models, or LLaVA
+      const prompt = "Describe what's in this image";
+      return await generateWithVision(prompt, imageBase64);
+    };
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="API key invalid">
+    **Solution**: Verify the key is correct and hasn't expired
+    - OpenAI keys start with `sk-`
+    - Gemini keys start with `AI`
+    - Check provider dashboard for key status
+  </Accordion>
+
+  <Accordion title="Rate limit exceeded">
+    **Solution**: Implement request queuing or upgrade plan
+    ```typescript
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    // Add delay between requests
+    await generateAIResponse(prompt1);
+    await delay(1000); // Wait 1 second
+    await generateAIResponse(prompt2);
+    ```
+  </Accordion>
+
+  <Accordion title="Ollama connection failed">
+    **Solution**: Ensure Ollama is running
+    ```bash
+    # Start Ollama
+    ollama serve
+    
+    # Verify it's running
+    curl http://localhost:11434
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Build a Chat Interface"
+    icon="comments"
+    href="/guides/customization"
+  >
+    Create an AI chat screen
+  </Card>
+  <Card
+    title="Add Voice Input"
+    icon="microphone"
+    href="/features/tts"
+  >
+    Combine with Text-to-Speech
+  </Card>
+</CardGroup>

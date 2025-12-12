@@ -1,0 +1,423 @@
+---
+title: Database Configuration
+description: 'Supabase PostgreSQL with app-prefixed tables and Row-Level Security'
+---
+
+## Overview
+
+Mobile Stack apps use Supabase for database functionality with intelligent table prefixing that allows multiple apps to share a single Supabase project while keeping data isolated.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="App Prefixing" icon="tags">
+    Tables automatically prefixed (e.g., `myapp_users`)
+  </Card>
+  <Card title="Row-Level Security" icon="shield-halved">
+    User data isolated at database level
+  </Card>
+  <Card title="Type Safety" icon="code">
+    Auto-generated TypeScript types
+  </Card>
+  <Card title="Real-time" icon="bolt">
+    Subscribe to database changes
+  </Card>
+</CardGroup>
+
+## Table Prefixing
+
+Each app gets its own prefix to organize tables:
+
+```sql
+-- App: "my-awesome-app"
+my_awesome_app_user_profiles
+my_awesome_app_posts
+my_awesome_app_comments
+
+-- App: "photo-menu"
+photo_menu_restaurants
+photo_menu_menus
+photo_menu_items
+
+-- Shared auth tables (Supabase managed)
+auth.users
+auth.sessions
+```
+
+<Note>
+  **Benefits**: One Supabase project = lower costs, shared authentication, easy cross-app queries if needed
+</Note>
+
+## Initial Schema
+
+Every generated app includes a base schema in `supabase/schema.sql`:
+
+```sql
+-- User profiles table
+CREATE TABLE IF NOT EXISTS {prefix}_user_profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row-Level Security
+ALTER TABLE {prefix}_user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own profile
+CREATE POLICY "Users can view own profile"
+  ON {prefix}_user_profiles FOR SELECT
+  USING (auth.uid() = id);
+
+-- Users can update their own profile
+CREATE POLICY "Users can update own profile"
+  ON {prefix}_user_profiles FOR UPDATE
+  USING (auth.uid() = id);
+```
+
+<Tip>
+  The `{prefix}` placeholder is replaced with your app's prefix during generation
+</Tip>
+
+## Running Migrations
+
+<Steps>
+  <Step title="Open Supabase Dashboard">
+    Navigate to your project at [supabase.com](https://supabase.com)
+  </Step>
+
+  <Step title="Go to SQL Editor">
+    Click **SQL Editor** in the left sidebar
+  </Step>
+
+  <Step title="Copy Schema">
+    Open `supabase/schema.sql` in your generated app and copy all contents
+  </Step>
+
+  <Step title="Execute SQL">
+    Paste into SQL Editor and click **Run** or press Cmd/Ctrl + Enter
+  </Step>
+
+  <Step title="Verify Tables">
+    Go to **Table Editor** to see your new tables
+  </Step>
+</Steps>
+
+## Adding Custom Tables
+
+Create tables with your app prefix:
+
+```sql
+-- Example: Tasks table
+CREATE TABLE IF NOT EXISTS myapp_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  completed BOOLEAN DEFAULT FALSE,
+  due_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE myapp_tasks ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own tasks
+CREATE POLICY "Users can view own tasks"
+  ON myapp_tasks FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Users can insert their own tasks
+CREATE POLICY "Users can insert own tasks"
+  ON myapp_tasks FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own tasks
+CREATE POLICY "Users can update own tasks"
+  ON myapp_tasks FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Users can delete their own tasks
+CREATE POLICY "Users can delete own tasks"
+  ON myapp_tasks FOR DELETE
+  USING (auth.uid() = user_id);
+```
+
+## Querying Data
+
+Use the Supabase client to query your tables:
+
+```typescript
+import { supabase } from '@/lib/supabase';
+
+// Fetch all tasks for current user
+const { data: tasks, error } = await supabase
+  .from('myapp_tasks')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+if (error) {
+  console.error('Error fetching tasks:', error);
+} else {
+  console.log('Tasks:', tasks);
+}
+```
+
+### Insert Data
+
+```typescript
+const { data, error } = await supabase
+  .from('myapp_tasks')
+  .insert({
+    title: 'Complete documentation',
+    description: 'Write all the docs',
+    user_id: user.id,
+  })
+  .select()
+  .single();
+```
+
+### Update Data
+
+```typescript
+const { error } = await supabase
+  .from('myapp_tasks')
+  .update({ completed: true })
+  .eq('id', taskId);
+```
+
+### Delete Data
+
+```typescript
+const { error } = await supabase
+  .from('myapp_tasks')
+  .delete()
+  .eq('id', taskId);
+```
+
+## Real-time Subscriptions
+
+Subscribe to database changes:
+
+```typescript
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export default function TaskList() {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    // Initial fetch
+    fetchTasks();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'myapp_tasks',
+        },
+        (payload) => {
+          console.log('Change detected:', payload);
+          fetchTasks(); // Refetch data
+        }
+      )
+      .subscribe();
+
+    // Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchTasks = async () => {
+    const { data } = await supabase
+      .from('myapp_tasks')
+      .select('*');
+    setTasks(data || []);
+  };
+
+  return (
+    <FlatList
+      data={tasks}
+      renderItem={({ item }) => <TaskItem task={item} />}
+    />
+  );
+}
+```
+
+## Row-Level Security (RLS)
+
+RLS ensures users can only access their own data:
+
+```sql
+-- Policy structure
+CREATE POLICY "policy_name"
+  ON table_name
+  FOR operation -- SELECT, INSERT, UPDATE, DELETE, ALL
+  USING (condition); -- For SELECT, UPDATE, DELETE
+  WITH CHECK (condition); -- For INSERT, UPDATE
+```
+
+### Common Patterns
+
+<Tabs>
+  <Tab title="User Owns Record">
+    ```sql
+    -- User can only see/edit their own records
+    CREATE POLICY "Users manage own data"
+      ON myapp_posts
+      FOR ALL
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
+    ```
+  </Tab>
+
+  <Tab title="Public Read, Owner Write">
+    ```sql
+    -- Anyone can view, only owner can modify
+    CREATE POLICY "Public read"
+      ON myapp_posts
+      FOR SELECT
+      USING (true);
+
+    CREATE POLICY "Owner write"
+      ON myapp_posts
+      FOR ALL
+      USING (auth.uid() = user_id)
+      WITH CHECK (auth.uid() = user_id);
+    ```
+  </Tab>
+
+  <Tab title="Role-Based Access">
+    ```sql
+    -- Admins can see all, users see own
+    CREATE POLICY "Role-based access"
+      ON myapp_data
+      FOR SELECT
+      USING (
+        auth.uid() = user_id OR
+        (SELECT role FROM myapp_user_profiles WHERE id = auth.uid()) = 'admin'
+      );
+    ```
+  </Tab>
+</Tabs>
+
+## TypeScript Types
+
+Generate types from your database schema:
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Login
+supabase login
+
+# Generate types
+supabase gen types typescript --project-id your-project-ref > types/database.types.ts
+```
+
+Use generated types:
+
+```typescript
+import { Database } from '@/types/database.types';
+
+type Task = Database['public']['Tables']['myapp_tasks']['Row'];
+type TaskInsert = Database['public']['Tables']['myapp_tasks']['Insert'];
+type TaskUpdate = Database['public']['Tables']['myapp_tasks']['Update'];
+
+const createTask = async (task: TaskInsert) => {
+  const { data, error } = await supabase
+    .from('myapp_tasks')
+    .insert(task)
+    .select()
+    .single();
+  
+  return data as Task;
+};
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always use app prefix" icon="tag">
+    **Prefix all tables** with your app name to avoid conflicts:
+    ```sql
+    myapp_users ✅
+    users ❌
+    ```
+  </Accordion>
+
+  <Accordion title="Enable RLS on all tables" icon="shield">
+    **Never** skip Row-Level Security:
+    ```sql
+    ALTER TABLE myapp_table ENABLE ROW LEVEL SECURITY;
+    ```
+  </Accordion>
+
+  <Accordion title="Use transactions for related changes" icon="code-merge">
+    Wrap related operations in transactions:
+    ```typescript
+    const { error } = await supabase.rpc('create_post_with_tags', {
+      post_data: { ... },
+      tag_ids: [1, 2, 3]
+    });
+    ```
+  </Accordion>
+
+  <Accordion title="Index frequently queried columns" icon="gauge-high">
+    Add indexes for better performance:
+    ```sql
+    CREATE INDEX idx_myapp_posts_user_id ON myapp_posts(user_id);
+    CREATE INDEX idx_myapp_posts_created_at ON myapp_posts(created_at DESC);
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="'relation does not exist' error">
+    **Cause**: Table not created or wrong prefix
+    
+    **Solution**: Verify table name matches your app prefix and run migration
+  </Accordion>
+
+  <Accordion title="RLS policy blocking queries">
+    **Cause**: Missing or incorrect RLS policy
+    
+    **Solution**: Check policies in Supabase dashboard → Authentication → Policies
+  </Accordion>
+
+  <Accordion title="Cannot insert/update data">
+    **Cause**: Missing `WITH CHECK` clause in RLS policy
+    
+    **Solution**: Add `WITH CHECK` for INSERT/UPDATE policies
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Set Up Authentication"
+    icon="shield-check"
+    href="/features/authentication"
+  >
+    Enable user authentication
+  </Card>
+  <Card
+    title="Real-time Features"
+    icon="bolt"
+    href="/guides/customization"
+  >
+    Add live data subscriptions
+  </Card>
+</CardGroup>
