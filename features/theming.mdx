@@ -1,0 +1,361 @@
+---
+title: Dynamic Theming System
+description: 'Beautiful light and dark mode that adapts across all components'
+---
+
+## Overview
+
+Mobile Stack includes a comprehensive theming system that provides seamless light/dark mode switching across your entire application. Every component, screen, and element automatically adapts to the current theme.
+
+## How It Works
+
+The theme system uses React Context to provide theme colors throughout the app:
+
+```typescript
+import { useTheme } from '@/context/ThemeContext';
+
+export default function MyComponent() {
+  const { colors, theme, toggleTheme } = useTheme();
+  
+  return (
+    <View style={{ backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text }}>Hello World</Text>
+    </View>
+  );
+}
+```
+
+## Theme Colors
+
+<Tabs>
+  <Tab title="Dark Mode (Default)">
+    ```typescript
+    {
+      background: '#000000',      // Pure black
+      primary: '#000000',         
+      surface: 'rgba(255,255,255,0.1)',
+      surfaceAlt: 'rgba(255,255,255,0.05)',
+      overlay: 'rgba(0,0,0,0.7)',
+      text: '#FFFFFF',           // White text
+      textSecondary: 'rgba(255,255,255,0.7)',
+      textTertiary: 'rgba(255,255,255,0.5)',
+      border: 'rgba(255,255,255,0.1)',
+      borderAlt: 'rgba(255,255,255,0.2)',
+    }
+    ```
+  </Tab>
+
+  <Tab title="Light Mode">
+    ```typescript
+    {
+      background: '#FFFFFF',      // Pure white
+      primary: '#FFFFFF',
+      surface: 'rgba(0,0,0,0.1)',
+      surfaceAlt: 'rgba(0,0,0,0.05)',
+      overlay: 'rgba(0,0,0,0.5)',
+      text: '#000000',           // Black text
+      textSecondary: 'rgba(0,0,0,0.7)',
+      textTertiary: 'rgba(0,0,0,0.5)',
+      border: 'rgba(0,0,0,0.1)',
+      borderAlt: 'rgba(0,0,0,0.2)',
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Using Theme Colors
+
+### Basic Usage
+
+Replace all hardcoded colors with theme tokens:
+
+<CodeGroup>
+```typescript Before (Hardcoded)
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#000',
+  },
+  title: {
+    color: '#fff',
+  },
+});
+```
+
+```typescript After (Theme-aware)
+const { colors } = useTheme();
+
+const styles = useMemo(() => StyleSheet.create({
+  container: {
+    backgroundColor: colors.background,
+  },
+  title: {
+    color: colors.text,
+  },
+}), [colors]);
+```
+</CodeGroup>
+
+### Dynamic Styles with useMemo
+
+Always wrap `StyleSheet.create()` in `useMemo()` to ensure styles rebuild when theme changes:
+
+```typescript
+import { useMemo } from 'react';
+import { useTheme } from '@/context/ThemeContext';
+
+export default function MyScreen() {
+  const { colors } = useTheme();
+  
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    card: {
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+    },
+    text: {
+      color: colors.text,
+    },
+  }), [colors]);
+
+  return <View style={styles.container}>...</View>;
+}
+```
+
+<Note>
+  The `[colors]` dependency ensures styles are recalculated when theme changes.
+</Note>
+
+## Theme Toggle
+
+Users can switch themes in the Settings screen. The theme preference is automatically persisted using AsyncStorage.
+
+### Programmatic Toggle
+
+```typescript
+import { useTheme } from '@/context/ThemeContext';
+
+export default function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    <TouchableOpacity onPress={toggleTheme}>
+      <Text>Current: {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+## Component Examples
+
+### Themed Button
+
+```typescript
+import { useTheme } from '@/context/ThemeContext';
+
+function ThemedButton({ title, onPress }: Props) {
+  const { colors } = useTheme();
+  
+  return (
+    <TouchableOpacity
+      style={{
+        backgroundColor: colors.primary,
+        padding: 16,
+        borderRadius: 8,
+      }}
+      onPress={onPress}
+    >
+      <Text style={{ color: colors.background }}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+### Themed Card
+
+```typescript
+function ThemedCard({ children }: Props) {
+  const { colors } = useTheme();
+  
+  return (
+    <View
+      style={{
+        backgroundColor: colors.surfaceAlt,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 12,
+        padding: 16,
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+```
+
+## Color Token Reference
+
+<ParamField path="colors.background" type="string">
+  Main background color for screens and containers.
+  
+  **Dark**: `#000000` | **Light**: `#FFFFFF`
+</ParamField>
+
+<ParamField path="colors.text" type="string">
+  Primary text color for headings and body text.
+  
+  **Dark**: `#FFFFFF` | **Light**: `#000000`
+</ParamField>
+
+<ParamField path="colors.textSecondary" type="string">
+  Secondary text color for subtitles and less prominent text.
+  
+  **Dark**: `rgba(255,255,255,0.7)` | **Light**: `rgba(0,0,0,0.7)`
+</ParamField>
+
+<ParamField path="colors.textTertiary" type="string">
+  Tertiary text color for placeholders and disabled text.
+  
+  **Dark**: `rgba(255,255,255,0.5)` | **Light**: `rgba(0,0,0,0.5)`
+</ParamField>
+
+<ParamField path="colors.surface" type="string">
+  Surface color for elevated elements like cards.
+  
+  **Dark**: `rgba(255,255,255,0.1)` | **Light**: `rgba(0,0,0,0.1)`
+</ParamField>
+
+<ParamField path="colors.surfaceAlt" type="string">
+  Alternative surface color for nested elements.
+  
+  **Dark**: `rgba(255,255,255,0.05)` | **Light**: `rgba(0,0,0,0.05)`
+</ParamField>
+
+<ParamField path="colors.border" type="string">
+  Border color for dividers and element outlines.
+  
+  **Dark**: `rgba(255,255,255,0.1)` | **Light**: `rgba(0,0,0,0.1)`
+</ParamField>
+
+<ParamField path="colors.overlay" type="string">
+  Overlay color for modals and dimmed backgrounds.
+  
+  **Dark**: `rgba(0,0,0,0.7)` | **Light**: `rgba(0,0,0,0.5)`
+</ParamField>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always use theme colors">
+    ❌ **Don't**: Use hardcoded colors
+    ```typescript
+    backgroundColor: '#FFFFFF'
+    color: '#000000'
+    ```
+    
+    ✅ **Do**: Use theme tokens
+    ```typescript
+    backgroundColor: colors.background
+    color: colors.text
+    ```
+  </Accordion>
+
+  <Accordion title="Use useMemo for styles">
+    ❌ **Don't**: Create styles without useMemo
+    ```typescript
+    const styles = StyleSheet.create({ ... });
+    ```
+    
+    ✅ **Do**: Wrap in useMemo with colors dependency
+    ```typescript
+    const styles = useMemo(() => StyleSheet.create({ ... }), [colors]);
+    ```
+  </Accordion>
+
+  <Accordion title="Pass colors to child components">
+    When creating reusable components, pass colors as props:
+    
+    ```typescript
+    function FeatureCard({ title, colors }: Props) {
+      const styles = useMemo(() => StyleSheet.create({
+        card: { backgroundColor: colors.surfaceAlt },
+      }), [colors]);
+      
+      return <View style={styles.card}>...</View>;
+    }
+    
+    // Usage
+    const { colors } = useTheme();
+    <FeatureCard title="Hello" colors={colors} />
+    ```
+  </Accordion>
+
+  <Accordion title="Test both themes">
+    Always test your screens in both light and dark mode to ensure text is visible and UI looks good in both.
+  </Accordion>
+</AccordionGroup>
+
+## Customization
+
+To customize the theme colors, edit `context/ThemeContext.tsx`:
+
+```typescript
+const darkTheme: ThemeColors = {
+  // Customize these values
+  background: '#0A0A0A',  // Slightly lighter black
+  primary: '#3B82F6',     // Blue primary color
+  // ... other colors
+};
+
+const lightTheme: ThemeColors = {
+  // Customize these values  
+  background: '#F5F5F5',  // Off-white
+  primary: '#3B82F6',     // Blue primary color
+  // ... other colors
+};
+```
+
+<Tip>
+  Keep contrast ratios in mind for accessibility. Ensure text is readable against backgrounds in both themes.
+</Tip>
+
+## Migration Guide
+
+If you have an existing app with hardcoded colors, follow these steps:
+
+<Steps>
+  <Step title="Import useTheme">
+    Add the hook to your component:
+    ```typescript
+    import { useTheme } from '@/context/ThemeContext';
+    const { colors } = useTheme();
+    ```
+  </Step>
+
+  <Step title="Wrap styles in useMemo">
+    ```typescript
+    const styles = useMemo(() => StyleSheet.create({
+      // your styles
+    }), [colors]);
+    ```
+  </Step>
+
+  <Step title="Replace hardcoded colors">
+    Use find and replace:
+    - `'#fff'` → `colors.text`
+    - `'#000'` → `colors.background`
+    - `'rgba(255,255,255,0.7)'` → `colors.textSecondary`
+  </Step>
+
+  <Step title="Test theme switching">
+    Navigate to Settings and toggle between light/dark mode to verify all text is visible.
+  </Step>
+</Steps>
+
+<Check>
+  Your component is now fully theme-aware and will automatically adapt when users switch themes!
+</Check>
