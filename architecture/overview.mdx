@@ -7,42 +7,42 @@ description: 'Understanding the Mobile Stack system design and structure'
 
 Mobile Stack uses a modular architecture that allows features to be enabled or disabled while maintaining a consistent structure.
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 Mobile Stack CLI                     │
-│  ┌──────────┐  ┌────────────┐  ┌────────────────┐ │
-│  │  cli.ts  │→ │ create-app │→ │ EJS Templates  │ │
-│  │(Commander)│  │   (Logic)  │  │   (Processor)  │ │
-│  └──────────┘  └────────────┘  └────────────────┘ │
-└─────────────────────────────────────────────────────┘
-                      ↓
-              Generates App
-                      ↓
-┌─────────────────────────────────────────────────────┐
-│              Generated Mobile App                    │
-│                                                       │
-│  App Screens (Expo Router)                          │
-│  ├── (auth)/login.tsx - Google OAuth                │
-│  ├── (app)/index.tsx - Home/Dashboard               │
-│  └── (app)/settings.tsx - AI Config, Profile        │
-│                                                       │
-│  Core Services                                       │
-│  ├── AuthContext - Session management               │
-│  ├── ThemeContext - Light/Dark mode                 │
-│  ├── llmService - AI model integration              │
-│  └── supabase - Database client                     │
-│                                                       │
-└─────────────────────────────────────────────────────┘
-                      ↓
-            External Services
-                      ↓
-┌─────────────────────────────────────────────────────┐
-│  ┌──────────┐  ┌─────────┐  ┌──────────┐          │
-│  │ Supabase │  │  OpenAI │  │ PostHog  │          │
-│  │(DB+Auth) │  │ Gemini  │  │(Analytics)│          │
-│  │          │  │ Ollama  │  │          │          │
-│  └──────────┘  └─────────┘  └──────────┘          │
-└─────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph CLI["Mobile Stack CLI"]
+        A[cli.ts<br/>Commander] --> B[create-app.ts<br/>Logic]
+        B --> C[EJS Templates<br/>Processor]
+    end
+    
+    C -->|Generates| D[Mobile App]
+    
+    subgraph App["Generated Mobile App"]
+        subgraph Screens["App Screens - Expo Router"]
+            E["(auth)/login.tsx<br/>Google OAuth"]
+            F["(app)/index.tsx<br/>Home/Dashboard"]
+            G["(app)/settings.tsx<br/>AI Config"]
+        end
+        
+        subgraph Services["Core Services"]
+            H[AuthContext<br/>Session mgmt]
+            I[ThemeContext<br/>Light/Dark mode]
+            J[llmService<br/>AI models]
+            K[supabase<br/>Database client]
+        end
+    end
+    
+    subgraph External["External Services"]
+        L[Supabase<br/>DB + Auth]
+        M[OpenAI<br/>Gemini<br/>Ollama]
+        N[PostHog<br/>Analytics]
+    end
+    
+    D --> External
+    Services --> External
+    
+    style CLI fill:#4ade80
+    style App fill:#60a5fa
+    style External fill:#f59e0b
 ```
 
 ## File Structure
